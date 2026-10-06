@@ -90,53 +90,28 @@ function mulberry32(seed) {
   };
 }
 
-const LEVEL_BLUEPRINTS = [
-  { colorCount: 3, slotCount: 5, splitCount: 4, seed: 1189586243 },
-  { colorCount: 3, slotCount: 5, splitCount: 9, seed: 61705705 },
-  { colorCount: 3, slotCount: 5, splitCount: 8, seed: -1986506650 },
-  { colorCount: 3, slotCount: 5, splitCount: 13, seed: -1584673632 },
-  { colorCount: 3, slotCount: 5, splitCount: 16, seed: -677392509 },
-  { colorCount: 3, slotCount: 5, splitCount: 15, seed: 1297565210 },
-  { colorCount: 4, slotCount: 6, splitCount: 22, seed: -650509271 },
-  { colorCount: 4, slotCount: 6, splitCount: 19, seed: 729638802 },
-  { colorCount: 4, slotCount: 6, splitCount: 17, seed: 927330556 },
-  { colorCount: 4, slotCount: 6, splitCount: 21, seed: 1595329184 },
-  { colorCount: 4, slotCount: 6, splitCount: 15, seed: -1874480082 },
-  { colorCount: 4, slotCount: 6, splitCount: 25, seed: 1960540020 },
-  { colorCount: 4, slotCount: 6, splitCount: 18, seed: 1175344021 },
-  { colorCount: 5, slotCount: 7, splitCount: 17, seed: 467448779 },
-  { colorCount: 5, slotCount: 7, splitCount: 26, seed: -1526558438 },
-  { colorCount: 5, slotCount: 7, splitCount: 20, seed: -1986506656 },
-  { colorCount: 5, slotCount: 7, splitCount: 18, seed: -1780421294 },
-  { colorCount: 5, slotCount: 7, splitCount: 32, seed: -581803797 },
-  { colorCount: 5, slotCount: 7, splitCount: 24, seed: -1666432743 },
-  { colorCount: 5, slotCount: 7, splitCount: 20, seed: -2077432164 },
-  { colorCount: 5, slotCount: 7, splitCount: 21, seed: -1374961069 },
-  { colorCount: 6, slotCount: 8, splitCount: 29, seed: -319548240 },
-  { colorCount: 6, slotCount: 8, splitCount: 23, seed: 467448776 },
-  { colorCount: 6, slotCount: 8, splitCount: 36, seed: 1410872762 },
-  { colorCount: 6, slotCount: 8, splitCount: 23, seed: -190626335 },
-  { colorCount: 6, slotCount: 8, splitCount: 32, seed: 1316183097 },
-  { colorCount: 6, slotCount: 8, splitCount: 25, seed: -987546996 },
-  { colorCount: 6, slotCount: 8, splitCount: 36, seed: -1852560799 },
-  { colorCount: 6, slotCount: 8, splitCount: 29, seed: 71567412 },
-  { colorCount: 6, slotCount: 8, splitCount: 34, seed: -1929531623 },
-];
-
 export function levelConfig(levelNumber) {
   const index = Math.max(0, Math.min(29, levelNumber - 1));
-  const { seed: _seed, ...config } = LEVEL_BLUEPRINTS[index];
-  return { ...config };
+  return {
+    colorCount: 6,
+    slotCount: 8,
+    targetMoves: 16 + Math.floor(index * 6 / 29),
+  };
 }
 
-export function generateLevel(levelNumber) {
-  const index = Math.max(0, Math.min(29, levelNumber - 1));
-  const { seed, ...config } = LEVEL_BLUEPRINTS[index];
+function createRandomSeed() {
+  if (globalThis.crypto?.getRandomValues) {
+    return globalThis.crypto.getRandomValues(new Uint32Array(1))[0];
+  }
+  return (Date.now() ^ Math.floor(Math.random() * 4294967296)) >>> 0;
+}
+
+function scrambleCandidate(config, seed, splitCount) {
   const random = mulberry32(seed);
   const state = createSolvedState(config.colorCount, config.slotCount);
   const inverseMoves = [];
 
-  for (let step = 0; step < config.splitCount; step += 1) {
+  for (let step = 0; step < splitCount; step += 1) {
     const candidates = [];
     for (let source = 0; source < state.length; source += 1) {
       const stack = state[source];
@@ -173,11 +148,39 @@ export function generateLevel(levelNumber) {
 
   const guaranteedSolution = inverseMoves.reverse();
   if (!validateSolution(state, guaranteedSolution, config.colorCount)) {
-    throw new Error(`Le niveau ${levelNumber} n'a pas pu être validé.`);
+    return null;
   }
   const solution = solveState(state, config.colorCount, { maxNodes: 100000, maxTimeMs: 1600 })
     ?? guaranteedSolution;
-  return { number: levelNumber, ...config, initialState: cloneState(state), solution };
+  if (!validateSolution(state, solution, config.colorCount)) return null;
+  return { state, solution, seed, splitCount };
+}
+
+export function generateLevel(levelNumber, requestedSeed = createRandomSeed()) {
+  const config = levelConfig(levelNumber);
+  const baseSeed = requestedSeed >>> 0;
+  let best = null;
+
+  for (let attempt = 0; attempt < 600; attempt += 1) {
+    const seed = (baseSeed ^ Math.imul(attempt + 1, 2654435761)) >>> 0;
+    const splitCount = 22 + ((seed >>> 8) % 17);
+    const candidate = scrambleCandidate(config, seed, splitCount);
+    if (!candidate) continue;
+    const distance = Math.abs(candidate.solution.length - config.targetMoves);
+    const score = distance * 2 + (candidate.solution.length < config.targetMoves ? 1 : 0);
+    if (!best || score < best.score) best = { ...candidate, score };
+    if (distance === 0) break;
+  }
+
+  if (!best) throw new Error(`Le niveau ${levelNumber} n'a pas pu être généré.`);
+  return {
+    number: levelNumber,
+    ...config,
+    splitCount: best.splitCount,
+    seed: best.seed,
+    initialState: cloneState(best.state),
+    solution: best.solution,
+  };
 }
 
 export function validateSolution(initialState, moves, colorCount) {

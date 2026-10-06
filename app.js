@@ -10,7 +10,7 @@ import {
   solveState,
   topGroupStart,
   validateSolution,
-} from "./game-core.js?v=4";
+} from "./game-core.js?v=6";
 
 const playfield = document.querySelector("#playfield");
 const levelTitle = document.querySelector("#levelTitle");
@@ -116,7 +116,7 @@ function render() {
   });
 
   moveCounter.textContent = `${moveCount} ${moveCount === 1 ? "coup" : "coups"}`;
-  levelTitle.textContent = won ? "Niveau terminé" : `Niveau ${currentLevelNumber}`;
+  levelTitle.textContent = `Niveau ${currentLevelNumber}`;
   levelTitle.classList.toggle("complete", won);
   undoButton.disabled = history.length === 0;
   hintLabel.textContent = won ? "Suivant" : "Indice";

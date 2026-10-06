@@ -12,7 +12,8 @@ python3 -m http.server 4173
 
 ## Principes respectés
 
-- 30 niveaux tous accessibles, de 3 couleurs / 5 emplacements à 6 couleurs / 8 emplacements.
+- 30 niveaux tous accessibles, avec 6 couleurs et 8 emplacements dès le début.
+- Un nouveau mélange soluble est créé chaque fois qu’un niveau est ouvert ; Recommencer conserve le mélange en cours.
 - 7 livres par couleur, numérotés de 1 à 6 ; le livre 0 n’affiche aucun numéro.
 - Déplacement du groupe consécutif placé au sommet d’une pile.
 - Destination vide, ou livre plus grand de la même couleur.

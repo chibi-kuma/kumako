@@ -5,6 +5,7 @@ import {
   generateLevel,
   isLegalMove,
   isSolved,
+  levelConfig,
   topGroupStart,
   validateSolution,
 } from "../game-core.js";
@@ -26,17 +27,23 @@ assert.ok(applyMove(interrupted, { from: 0, to: 1 }));
 
 const solutionLengths = [];
 for (let number = 1; number <= 30; number += 1) {
-  const level = generateLevel(number);
+  const level = generateLevel(number, 100000 + number);
   assert.equal(level.initialState.length, level.slotCount);
+  assert.equal(level.colorCount, 6);
+  assert.equal(level.slotCount, 8);
   assert.equal(validateSolution(level.initialState, level.solution, level.colorCount), true, `niveau ${number}`);
   const bookCount = level.initialState.flat().length;
   assert.equal(bookCount, level.colorCount * 7);
+  assert.ok(Math.abs(level.solution.length - level.targetMoves) <= 1, `difficulté niveau ${number}`);
   solutionLengths.push(level.solution.length);
 }
 
-for (const [start, end] of [[0, 6], [6, 13], [13, 21], [21, 30]]) {
-  const tier = solutionLengths.slice(start, end);
-  assert.deepEqual(tier, [...tier].sort((a, b) => a - b), `progression niveaux ${start + 1}-${end}`);
-}
+const targets = Array.from({ length: 30 }, (_, index) => levelConfig(index + 1).targetMoves);
+assert.deepEqual(targets, [...targets].sort((a, b) => a - b));
+assert.ok(solutionLengths.every((length) => length >= 15));
 
-console.log("30 niveaux validés avec une difficulté progressive.");
+const firstMix = generateLevel(1, 111);
+const secondMix = generateLevel(1, 222);
+assert.notDeepEqual(firstMix.initialState, secondMix.initialState);
+
+console.log("30 niveaux aléatoires validés avec six couleurs et une difficulté progressive.");

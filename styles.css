@@ -105,9 +105,14 @@ button { font: inherit; }
 .playfield {
   position: absolute;
   z-index: 5;
-  inset: clamp(118px, 35vh, 355px) max(8px, env(safe-area-inset-right)) clamp(71px, 20.5vh, 192px) max(8px, env(safe-area-inset-left));
+  top: clamp(118px, 35vh, 355px);
+  bottom: clamp(71px, 20.5vh, 192px);
+  left: 50%;
+  width: min(94%, calc(100% - 16px));
+  transform: translateX(-50%);
   display: grid;
   grid-template-columns: repeat(var(--slot-count, 8), minmax(0, 1fr));
+  column-gap: clamp(1px, .35vw, 5px);
   align-items: stretch;
 }
 
