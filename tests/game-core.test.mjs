@@ -24,12 +24,19 @@ assert.equal(topGroupStart(interrupted[0]), 1);
 assert.equal(isLegalMove(interrupted, 0, 1), true);
 assert.ok(applyMove(interrupted, { from: 0, to: 1 }));
 
+const solutionLengths = [];
 for (let number = 1; number <= 30; number += 1) {
   const level = generateLevel(number);
   assert.equal(level.initialState.length, level.slotCount);
   assert.equal(validateSolution(level.initialState, level.solution, level.colorCount), true, `niveau ${number}`);
   const bookCount = level.initialState.flat().length;
   assert.equal(bookCount, level.colorCount * 7);
+  solutionLengths.push(level.solution.length);
 }
 
-console.log("30 niveaux validés.");
+for (const [start, end] of [[0, 6], [6, 13], [13, 21], [21, 30]]) {
+  const tier = solutionLengths.slice(start, end);
+  assert.deepEqual(tier, [...tier].sort((a, b) => a - b), `progression niveaux ${start + 1}-${end}`);
+}
+
+console.log("30 niveaux validés avec une difficulté progressive.");

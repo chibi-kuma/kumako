@@ -90,17 +90,49 @@ function mulberry32(seed) {
   };
 }
 
+const LEVEL_BLUEPRINTS = [
+  { colorCount: 3, slotCount: 5, splitCount: 4, seed: 1189586243 },
+  { colorCount: 3, slotCount: 5, splitCount: 9, seed: 61705705 },
+  { colorCount: 3, slotCount: 5, splitCount: 8, seed: -1986506650 },
+  { colorCount: 3, slotCount: 5, splitCount: 13, seed: -1584673632 },
+  { colorCount: 3, slotCount: 5, splitCount: 16, seed: -677392509 },
+  { colorCount: 3, slotCount: 5, splitCount: 15, seed: 1297565210 },
+  { colorCount: 4, slotCount: 6, splitCount: 22, seed: -650509271 },
+  { colorCount: 4, slotCount: 6, splitCount: 19, seed: 729638802 },
+  { colorCount: 4, slotCount: 6, splitCount: 17, seed: 927330556 },
+  { colorCount: 4, slotCount: 6, splitCount: 21, seed: 1595329184 },
+  { colorCount: 4, slotCount: 6, splitCount: 15, seed: -1874480082 },
+  { colorCount: 4, slotCount: 6, splitCount: 25, seed: 1960540020 },
+  { colorCount: 4, slotCount: 6, splitCount: 18, seed: 1175344021 },
+  { colorCount: 5, slotCount: 7, splitCount: 17, seed: 467448779 },
+  { colorCount: 5, slotCount: 7, splitCount: 26, seed: -1526558438 },
+  { colorCount: 5, slotCount: 7, splitCount: 20, seed: -1986506656 },
+  { colorCount: 5, slotCount: 7, splitCount: 18, seed: -1780421294 },
+  { colorCount: 5, slotCount: 7, splitCount: 32, seed: -581803797 },
+  { colorCount: 5, slotCount: 7, splitCount: 24, seed: -1666432743 },
+  { colorCount: 5, slotCount: 7, splitCount: 20, seed: -2077432164 },
+  { colorCount: 5, slotCount: 7, splitCount: 21, seed: -1374961069 },
+  { colorCount: 6, slotCount: 8, splitCount: 29, seed: -319548240 },
+  { colorCount: 6, slotCount: 8, splitCount: 23, seed: 467448776 },
+  { colorCount: 6, slotCount: 8, splitCount: 36, seed: 1410872762 },
+  { colorCount: 6, slotCount: 8, splitCount: 23, seed: -190626335 },
+  { colorCount: 6, slotCount: 8, splitCount: 32, seed: 1316183097 },
+  { colorCount: 6, slotCount: 8, splitCount: 25, seed: -987546996 },
+  { colorCount: 6, slotCount: 8, splitCount: 36, seed: -1852560799 },
+  { colorCount: 6, slotCount: 8, splitCount: 29, seed: 71567412 },
+  { colorCount: 6, slotCount: 8, splitCount: 34, seed: -1929531623 },
+];
+
 export function levelConfig(levelNumber) {
   const index = Math.max(0, Math.min(29, levelNumber - 1));
-  if (index < 6) return { colorCount: 3, slotCount: 5, splitCount: 4 + index * 2 };
-  if (index < 13) return { colorCount: 4, slotCount: 6, splitCount: 10 + (index - 6) * 2 };
-  if (index < 21) return { colorCount: 5, slotCount: 7, splitCount: 16 + (index - 13) * 2 };
-  return { colorCount: 6, slotCount: 8, splitCount: 22 + Math.floor((index - 21) * 1.75) };
+  const { seed: _seed, ...config } = LEVEL_BLUEPRINTS[index];
+  return { ...config };
 }
 
 export function generateLevel(levelNumber) {
-  const config = levelConfig(levelNumber);
-  const random = mulberry32(0x5f3759df ^ Math.imul(levelNumber, 2654435761));
+  const index = Math.max(0, Math.min(29, levelNumber - 1));
+  const { seed, ...config } = LEVEL_BLUEPRINTS[index];
+  const random = mulberry32(seed);
   const state = createSolvedState(config.colorCount, config.slotCount);
   const inverseMoves = [];
 
@@ -139,10 +171,12 @@ export function generateLevel(levelNumber) {
     inverseMoves.push({ from: choice.destination, to: choice.source });
   }
 
-  const solution = inverseMoves.reverse();
-  if (!validateSolution(state, solution, config.colorCount)) {
+  const guaranteedSolution = inverseMoves.reverse();
+  if (!validateSolution(state, guaranteedSolution, config.colorCount)) {
     throw new Error(`Le niveau ${levelNumber} n'a pas pu être validé.`);
   }
+  const solution = solveState(state, config.colorCount, { maxNodes: 100000, maxTimeMs: 1600 })
+    ?? guaranteedSolution;
   return { number: levelNumber, ...config, initialState: cloneState(state), solution };
 }
 
