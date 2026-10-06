@@ -200,6 +200,29 @@ button { font: inherit; }
 .book.movable { cursor: grab; }
 .book.source-hidden { opacity: 0; }
 
+.book.hint-source {
+  z-index: 8;
+  box-shadow: 0 0 0 2px rgba(255, 216, 112, .88), 0 0 12px rgba(255, 190, 49, .62), 0 3px 4px rgba(21, 7, 4, .5);
+  animation: hintBookPulse 1.15s ease-in-out infinite;
+}
+
+.book.hint-target {
+  z-index: 7;
+  box-shadow: 0 0 0 3px rgba(255, 216, 112, .82), 0 0 15px rgba(255, 190, 49, .72), 0 3px 4px rgba(21, 7, 4, .5);
+}
+
+.stack.hint-target-empty::after {
+  height: 15px;
+  background: rgba(255, 211, 104, .6);
+  box-shadow: 0 0 15px rgba(255, 190, 49, .72);
+  animation: hintBookPulse 1.15s ease-in-out infinite;
+}
+
+@keyframes hintBookPulse {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255, 205, 85, .25)); }
+  50% { filter: drop-shadow(0 0 9px rgba(255, 205, 85, .95)); }
+}
+
 .drag-ghost {
   position: fixed;
   z-index: 100;
@@ -238,6 +261,62 @@ button { font: inherit; }
 @keyframes hintPulse {
   0%, 100% { opacity: .65; }
   50% { opacity: 1; }
+}
+
+.completion-notice {
+  position: absolute;
+  z-index: 65;
+  top: clamp(66px, 12vh, 108px);
+  left: 50%;
+  min-height: 46px;
+  padding: 9px 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff2d3;
+  font-size: clamp(1rem, 2.5vw, 1.45rem);
+  font-weight: 650;
+  white-space: nowrap;
+  pointer-events: none;
+  border: 1px solid rgba(255, 207, 102, .88);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(100, 57, 26, .96), rgba(53, 27, 18, .96));
+  box-shadow: 0 8px 20px rgba(16, 7, 3, .4), 0 0 18px rgba(241, 184, 74, .32);
+  opacity: 0;
+  transform: translate(-50%, -8px) scale(.96);
+}
+
+.completion-notice[hidden] { display: none; }
+
+.completion-notice.visible {
+  animation: completionArrive .55s cubic-bezier(.18,.9,.25,1.18) forwards;
+}
+
+.completion-check {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  color: #3b220e;
+  background: #ffd473;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 202, 75, .55);
+}
+
+.level-complete .book {
+  animation: completedBookGlow .9s ease-out both;
+}
+
+@keyframes completionArrive {
+  0% { opacity: 0; transform: translate(-50%, -8px) scale(.96); }
+  65% { opacity: 1; transform: translate(-50%, 2px) scale(1.02); }
+  100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+@keyframes completedBookGlow {
+  0% { filter: brightness(1); }
+  48% { filter: brightness(1.22) drop-shadow(0 0 7px rgba(255, 205, 92, .68)); }
+  100% { filter: brightness(1); }
 }
 
 .controls {

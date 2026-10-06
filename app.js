@@ -26,7 +26,11 @@ const closeLevelsButton = document.querySelector("#closeLevelsButton");
 const levelGrid = document.querySelector("#levelGrid");
 const hintLayer = document.querySelector("#hintLayer");
 const hintPath = document.querySelector("#hintPath");
+const completionNotice = document.querySelector("#completionNotice");
 const status = document.querySelector("#status");
+const game = document.querySelector("#game");
+const topbar = document.querySelector(".topbar");
+const controls = document.querySelector(".controls");
 
 let currentLevelNumber = Number.parseInt(localStorage.getItem("kumako-level") || "1", 10);
 if (!Number.isInteger(currentLevelNumber) || currentLevelNumber < 1 || currentLevelNumber > 30) currentLevelNumber = 1;
@@ -79,8 +83,19 @@ function createBookElement(book, stackIndex, bookIndex) {
   return element;
 }
 
+function fitBooksBelowHeader() {
+  const tallestStack = Math.max(1, ...state.map((stack) => stack.length));
+  const playfieldRect = playfield.getBoundingClientRect();
+  const headerRect = topbar.getBoundingClientRect();
+  const availableHeight = Math.max(1, playfieldRect.bottom - headerRect.bottom - 10);
+  const normalHeight = Math.min(39, Math.max(20, window.innerHeight * .061));
+  const fittedHeight = Math.min(normalHeight, (availableHeight + tallestStack - 1) / tallestStack);
+  game.style.setProperty("--book-height", `${Math.max(15, Math.floor(fittedHeight))}px`);
+}
+
 function render() {
   playfield.style.setProperty("--slot-count", String(level.slotCount));
+  fitBooksBelowHeader();
   playfield.replaceChildren();
 
   state.forEach((stack, stackIndex) => {
@@ -106,6 +121,9 @@ function render() {
   undoButton.disabled = history.length === 0;
   hintLabel.textContent = won ? "Suivant" : "Indice";
   hintIcon.textContent = won ? "›" : "⌁";
+  game.classList.toggle("level-complete", won);
+  completionNotice.hidden = !won;
+  completionNotice.classList.toggle("visible", won);
   document.querySelectorAll(".book.movable").forEach((book) => {
     book.addEventListener("pointerdown", onPointerDown);
   });
@@ -167,6 +185,7 @@ function onPointerDown(event) {
   if (clickedIndex < groupStart) return;
 
   event.preventDefault();
+  hideHint();
   bookElement.setPointerCapture(event.pointerId);
   const stackElement = playfield.querySelector(`.stack[data-stack="${source}"]`);
   const sourceBooks = [...stackElement.querySelectorAll(".book")].slice(groupStart);
@@ -208,8 +227,9 @@ function onPointerDown(event) {
 }
 
 function nearestStack(clientX, clientY) {
-  const fieldRect = playfield.getBoundingClientRect();
-  if (clientY < fieldRect.top - 45 || clientY > fieldRect.bottom + 50) return -1;
+  const gameRect = game.getBoundingClientRect();
+  const controlsRect = controls.getBoundingClientRect();
+  if (clientY < gameRect.top || clientY > controlsRect.top + 12) return -1;
   let nearest = -1;
   let distance = Infinity;
   document.querySelectorAll(".stack").forEach((stack) => {
@@ -281,17 +301,40 @@ function hideHint() {
   window.clearTimeout(hintTimer);
   hintLayer.classList.remove("visible");
   hintPath.setAttribute("d", "");
+  document.querySelectorAll(".book.hint-source, .book.hint-target").forEach((book) => {
+    book.classList.remove("hint-source", "hint-target");
+  });
+  document.querySelectorAll(".stack.hint-target-empty").forEach((stack) => {
+    stack.classList.remove("hint-target-empty");
+  });
 }
 
 function showHint(move) {
-  const source = playfield.querySelector(`.stack[data-stack="${move.from}"]`).getBoundingClientRect();
-  const destination = playfield.querySelector(`.stack[data-stack="${move.to}"]`).getBoundingClientRect();
-  const gameRect = document.querySelector("#game").getBoundingClientRect();
-  const startX = source.left + source.width / 2 - gameRect.left;
-  const endX = destination.left + destination.width / 2 - gameRect.left;
-  const y = Math.max(playfield.getBoundingClientRect().top - gameRect.top - 18, 102);
-  const arch = Math.min(80, Math.abs(endX - startX) * .22 + 25);
-  hintPath.setAttribute("d", `M ${startX} ${y + arch} Q ${(startX + endX) / 2} ${y - arch} ${endX} ${y + arch}`);
+  const sourceStack = playfield.querySelector(`.stack[data-stack="${move.from}"]`);
+  const destinationStack = playfield.querySelector(`.stack[data-stack="${move.to}"]`);
+  const sourceBooks = [...sourceStack.querySelectorAll(".book")];
+  const sourceGroup = sourceBooks.slice(topGroupStart(state[move.from]));
+  sourceGroup.forEach((book) => book.classList.add("hint-source"));
+  const sourceAnchor = sourceGroup[0].getBoundingClientRect();
+
+  const destinationBooks = [...destinationStack.querySelectorAll(".book")];
+  const destinationTop = destinationBooks.at(-1);
+  if (destinationTop) destinationTop.classList.add("hint-target");
+  else destinationStack.classList.add("hint-target-empty");
+  const destinationAnchor = destinationTop?.getBoundingClientRect() ?? destinationStack.getBoundingClientRect();
+
+  const gameRect = game.getBoundingClientRect();
+  const headerBottom = topbar.getBoundingClientRect().bottom - gameRect.top;
+  const startX = sourceAnchor.left + sourceAnchor.width / 2 - gameRect.left;
+  const startY = sourceAnchor.top + sourceAnchor.height / 2 - gameRect.top;
+  const endX = destinationAnchor.left + destinationAnchor.width / 2 - gameRect.left;
+  const endY = destinationTop
+    ? destinationAnchor.top + destinationAnchor.height / 2 - gameRect.top
+    : destinationAnchor.bottom - gameRect.top - 14;
+  const distance = Math.abs(endX - startX);
+  const controlX = (startX + endX) / 2;
+  const controlY = Math.max(headerBottom + 16, Math.min(startY, endY) - Math.min(70, distance * .22 + 24));
+  hintPath.setAttribute("d", `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`);
   hintLayer.classList.add("visible");
   const sourceColor = BOOK_COLORS[movableGroup(state, move.from)[0].color].label;
   status.textContent = `Indice : déplace le groupe ${sourceColor} de la pile ${move.from + 1} vers la pile ${move.to + 1}.`;
@@ -362,7 +405,15 @@ closeLevelsButton.addEventListener("click", () => {
   levelsButton.focus();
 });
 
-window.addEventListener("resize", hideHint);
+let resizeFrame;
+window.addEventListener("resize", () => {
+  hideHint();
+  window.cancelAnimationFrame(resizeFrame);
+  resizeFrame = window.requestAnimationFrame(() => {
+    if (drag) finishDrag(null);
+    render();
+  });
+});
 document.addEventListener("visibilitychange", () => { if (document.hidden && drag) finishDrag(null); });
 
 buildLevelGrid();
