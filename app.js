@@ -10,7 +10,7 @@ import {
   solveState,
   topGroupStart,
   validateSolution,
-} from "./game-core.js";
+} from "./game-core.js?v=4";
 
 const playfield = document.querySelector("#playfield");
 const levelTitle = document.querySelector("#levelTitle");
