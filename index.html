@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#24130d" />
+    <meta name="description" content="Kumako, un puzzle de livres calme, sans chrono ni compétition." />
+    <title>Kumako</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2324130d'/%3E%3Cpath d='M13 38h38v12H13z' fill='%239a35ea' stroke='%23ffd56d' stroke-width='2'/%3E%3Cpath d='M19 24h32v12H19z' fill='%2322c9c2' stroke='%23ffe17a' stroke-width='2'/%3E%3Cpath d='M27 10h24v12H27z' fill='%23ef2536' stroke='%23ffcf66' stroke-width='2'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="game" class="game" aria-label="Kumako, puzzle de livres">
+      <header class="topbar">
+        <button id="levelsButton" class="top-button" type="button" aria-label="Choisir un niveau">
+          <span aria-hidden="true">‹</span><span>Niveaux</span>
+        </button>
+        <div id="levelTitle" class="level-title" aria-live="polite">Niveau 1</div>
+        <div id="moveCounter" class="move-counter">0 coup</div>
+      </header>
+
+      <section id="playfield" class="playfield" aria-label="Table de jeu"></section>
+      <svg id="hintLayer" class="hint-layer" aria-hidden="true">
+        <defs>
+          <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+            <path d="M0,0 L0,6 L8,3 z" />
+          </marker>
+        </defs>
+        <path id="hintPath" d="" marker-end="url(#arrowHead)" />
+      </svg>
+
+      <footer class="controls" aria-label="Commandes de la partie">
+        <button id="undoButton" class="control-button" type="button">
+          <span class="control-icon" aria-hidden="true">↶</span><span>Annuler</span>
+        </button>
+        <button id="restartButton" class="control-button" type="button">
+          <span class="control-icon" aria-hidden="true">↻</span><span>Recommencer</span>
+        </button>
+        <button id="hintButton" class="control-button hint-button" type="button">
+          <span id="hintIcon" class="control-icon" aria-hidden="true">⌁</span><span id="hintLabel">Indice</span>
+        </button>
+      </footer>
+
+      <section id="levelPanel" class="level-panel" hidden aria-label="Choisir un niveau">
+        <div class="level-panel-header">
+          <h1>Choisir un niveau</h1>
+          <button id="closeLevelsButton" class="close-levels" type="button">Retour au jeu</button>
+        </div>
+        <p>Tous les niveaux sont accessibles.</p>
+        <div id="levelGrid" class="level-grid"></div>
+      </section>
+
+      <div id="status" class="visually-hidden" aria-live="polite"></div>
+      <div class="portrait-message" aria-hidden="true">
+        <span class="phone-icon">▰</span>
+        <p>Tourne ton iPhone pour jouer en paysage.</p>
+      </div>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
