@@ -1,15 +1,15 @@
-const CACHE_NAME = "kumako-v7";
+const CACHE_NAME = "kumako-v8";
 const CORE_ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=7",
-  "./app.js?v=7",
-  "./game-core.js?v=7",
-  "./manifest.webmanifest?v=7",
+  "./styles.css?v=8",
+  "./app.js?v=8",
+  "./game-core.js?v=8",
+  "./manifest.webmanifest?v=8",
   "./assets/library-background.png",
-  "./assets/icon-192.png",
-  "./assets/icon-512.png",
-  "./assets/apple-touch-icon.png",
+  "./assets/icon-192.png?v=8",
+  "./assets/icon-512.png?v=8",
+  "./assets/apple-touch-icon.png?v=8",
 ];
 
 self.addEventListener("install", (event) => {

@@ -10,7 +10,7 @@ import {
   solveState,
   topGroupStart,
   validateSolution,
-} from "./game-core.js?v=7";
+} from "./game-core.js?v=8";
 
 const playfield = document.querySelector("#playfield");
 const levelTitle = document.querySelector("#levelTitle");
@@ -421,7 +421,7 @@ loadLevel(currentLevelNumber);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=7").catch(() => {
+    navigator.serviceWorker.register("./sw.js?v=8").catch(() => {
       // Le jeu reste entièrement utilisable en ligne si l'installation hors ligne échoue.
     });
   });
