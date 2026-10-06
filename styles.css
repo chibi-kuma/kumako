@@ -183,24 +183,10 @@ button { font: inherit; }
   box-shadow: 4px 0 0 color-mix(in srgb, var(--edge), transparent 35%);
 }
 
-.book::after {
-  content: "";
-  position: absolute;
-  right: -1px;
-  top: 14%;
-  bottom: 10%;
-  width: 22%;
-  border: 1.5px solid #2c1610;
-  border-right: 0;
-  border-radius: 40% 9% 16% 35%;
-  background: repeating-linear-gradient(174deg, #fffdf0 0 2px, #d9d4c4 3px 4px);
-  clip-path: polygon(28% 0, 100% 5%, 100% 82%, 61% 100%, 0 78%, 16% 30%);
-}
-
 .book-number {
   position: absolute;
   z-index: 3;
-  inset: 0 18% 0 10%;
+  inset: 0 10%;
   display: grid;
   place-items: center;
   color: #120b08;
