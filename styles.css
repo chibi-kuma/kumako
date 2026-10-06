@@ -162,9 +162,9 @@ button { font: inherit; }
   height: var(--book-height);
   margin-top: -1px;
   border: clamp(1.5px, .22vh, 2.5px) solid #260e0b;
-  border-radius: 24% 17% 20% 16% / 29% 24% 24% 24%;
+  border-radius: clamp(4px, 1.2vh, 7px);
   background:
-    linear-gradient(90deg, rgba(255,255,255,.2) 0 7%, transparent 13% 72%, rgba(0,0,0,.18) 74% 100%),
+    linear-gradient(90deg, rgba(255,255,255,.2) 0 7%, transparent 13% 100%),
     linear-gradient(180deg, color-mix(in srgb, var(--fill), white 13%), var(--fill) 62%, var(--dark));
   box-shadow: 0 3px 4px rgba(21, 7, 4, .5), inset 0 1px rgba(255,255,255,.25);
   transform: translateZ(0);
