@@ -1,0 +1,26 @@
+{
+  "name": "Kumako",
+  "short_name": "Kumako",
+  "description": "Un puzzle de livres calme, sans chrono ni compétition.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#24130d",
+  "theme_color": "#24130d",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

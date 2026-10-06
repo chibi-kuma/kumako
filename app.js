@@ -10,7 +10,7 @@ import {
   solveState,
   topGroupStart,
   validateSolution,
-} from "./game-core.js?v=6";
+} from "./game-core.js?v=7";
 
 const playfield = document.querySelector("#playfield");
 const levelTitle = document.querySelector("#levelTitle");
@@ -418,3 +418,11 @@ document.addEventListener("visibilitychange", () => { if (document.hidden && dra
 
 buildLevelGrid();
 loadLevel(currentLevelNumber);
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js?v=7").catch(() => {
+      // Le jeu reste entièrement utilisable en ligne si l'installation hors ligne échoue.
+    });
+  });
+}
