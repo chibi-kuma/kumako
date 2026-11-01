@@ -120,6 +120,7 @@ button { font: inherit; }
   position: relative;
   min-width: 0;
   border-radius: 16px;
+  transition: background 160ms ease;
 }
 
 .stack::after {
@@ -203,7 +204,10 @@ button { font: inherit; }
 }
 
 .book.movable { cursor: grab; }
-.book.source-hidden { opacity: 0; }
+.book.source-hidden {
+  opacity: 0;
+  transition: opacity 80ms ease;
+}
 
 .book.hint-source {
   z-index: 8;
@@ -233,8 +237,15 @@ button { font: inherit; }
   z-index: 100;
   inset: auto;
   pointer-events: none;
-  filter: drop-shadow(0 12px 9px rgba(0,0,0,.35));
+  opacity: .2;
+  filter: drop-shadow(0 5px 4px rgba(0,0,0,.2));
+  transition: opacity 90ms ease, filter 90ms ease;
   will-change: transform;
+}
+
+.drag-ghost.active {
+  opacity: 1;
+  filter: drop-shadow(0 14px 10px rgba(0,0,0,.4));
 }
 
 .drag-ghost .book { width: var(--ghost-book-width); }

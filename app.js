@@ -10,7 +10,7 @@ import {
   solveState,
   topGroupStart,
   validateSolution,
-} from "./game-core.js?v=8";
+} from "./game-core.js?v=9";
 
 const playfield = document.querySelector("#playfield");
 const levelTitle = document.querySelector("#levelTitle");
@@ -44,6 +44,7 @@ let hintPlan = [];
 let won = false;
 let drag = null;
 let hintTimer = null;
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function loadLevel(number) {
   currentLevelNumber = number;
@@ -201,6 +202,7 @@ function onPointerDown(event) {
   ghost.style.top = `${top}px`;
   ghost.style.width = `${right - left}px`;
   ghost.style.height = `${bottom - top}px`;
+  ghost.style.transform = "translate3d(0, 0, 0) scale(1.02)";
 
   const group = movableGroup(state, source);
   group.forEach((book) => {
@@ -212,18 +214,51 @@ function onPointerDown(event) {
   document.body.append(ghost);
   sourceBooks.forEach((element) => element.classList.add("source-hidden"));
 
-  drag = {
+  const activeDrag = {
     source,
     pointerId: event.pointerId,
     startX: event.clientX,
     startY: event.clientY,
+    originLeft: left,
+    originTop: top,
+    width: right - left,
+    height: bottom - top,
     ghost,
     sourceBooks,
     currentTarget: -1,
+    targetX: 0,
+    targetY: 0,
+    renderedX: 0,
+    renderedY: 0,
+    frame: null,
   };
+  drag = activeDrag;
+  window.requestAnimationFrame(() => {
+    if (activeDrag.ghost.isConnected) activeDrag.ghost.classList.add("active");
+  });
   bookElement.addEventListener("pointermove", onPointerMove);
   bookElement.addEventListener("pointerup", onPointerUp, { once: true });
   bookElement.addEventListener("pointercancel", onPointerCancel, { once: true });
+}
+
+function renderGhostFrame(activeDrag) {
+  activeDrag.frame = null;
+  activeDrag.renderedX = activeDrag.targetX;
+  activeDrag.renderedY = activeDrag.targetY;
+  activeDrag.ghost.style.transform = `translate3d(${activeDrag.renderedX}px, ${activeDrag.renderedY}px, 0) scale(1.02)`;
+}
+
+function scheduleGhostFrame(activeDrag) {
+  if (activeDrag.frame !== null) return;
+  activeDrag.frame = window.requestAnimationFrame(() => renderGhostFrame(activeDrag));
+}
+
+function flushGhostFrame(activeDrag) {
+  if (activeDrag.frame !== null) {
+    window.cancelAnimationFrame(activeDrag.frame);
+    activeDrag.frame = null;
+  }
+  renderGhostFrame(activeDrag);
 }
 
 function nearestStack(clientX, clientY) {
@@ -249,9 +284,9 @@ function clearDropHighlights() {
 
 function onPointerMove(event) {
   if (!drag || event.pointerId !== drag.pointerId) return;
-  const x = event.clientX - drag.startX;
-  const y = event.clientY - drag.startY;
-  drag.ghost.style.transform = `translate3d(${x}px, ${y}px, 0) scale(1.025)`;
+  drag.targetX = event.clientX - drag.startX;
+  drag.targetY = event.clientY - drag.startY;
+  scheduleGhostFrame(drag);
   const target = nearestStack(event.clientX, event.clientY);
   if (target === drag.currentTarget) return;
   drag.currentTarget = target;
@@ -267,24 +302,42 @@ function finishDrag(validMove) {
   clearDropHighlights();
   const activeDrag = drag;
   drag = null;
+  flushGhostFrame(activeDrag);
 
   if (validMove) {
-    const targetRect = playfield.querySelector(`.stack[data-stack="${validMove.to}"]`).getBoundingClientRect();
-    const ghostRect = activeDrag.ghost.getBoundingClientRect();
-    const translateX = targetRect.left + targetRect.width / 2 - (ghostRect.left + ghostRect.width / 2);
-    activeDrag.ghost.style.transition = "transform 170ms cubic-bezier(.2,.75,.3,1)";
-    activeDrag.ghost.style.transform += ` translate3d(${translateX}px, 0, 0)`;
+    const destination = playfield.querySelector(`.stack[data-stack="${validMove.to}"]`);
+    const targetRect = destination.getBoundingClientRect();
+    const targetTopBook = destination.querySelector(".book:last-child");
+    const targetTopRect = targetTopBook?.getBoundingClientRect();
+    const finalLeft = targetRect.left + (targetRect.width - activeDrag.width) / 2;
+    const finalBottom = targetTopRect ? targetTopRect.top + 1 : targetRect.bottom;
+    const finalTop = finalBottom - activeDrag.height;
+    const finalX = finalLeft - activeDrag.originLeft;
+    const finalY = finalTop - activeDrag.originTop;
+    const duration = reduceMotion ? 0 : 230;
+
+    activeDrag.ghost.getBoundingClientRect();
+    activeDrag.ghost.style.transition = duration
+      ? `transform ${duration}ms cubic-bezier(.22,.82,.22,1), filter 120ms ease`
+      : "none";
+    window.requestAnimationFrame(() => {
+      activeDrag.ghost.style.transform = `translate3d(${finalX}px, ${finalY}px, 0) scale(1)`;
+    });
     window.setTimeout(() => {
       activeDrag.ghost.remove();
       commitMove(validMove);
-    }, 175);
+    }, duration + 40);
   } else {
-    activeDrag.ghost.style.transition = "transform 290ms cubic-bezier(.2,.9,.35,1.18)";
+    const duration = reduceMotion ? 0 : 320;
+    activeDrag.ghost.getBoundingClientRect();
+    activeDrag.ghost.style.transition = duration
+      ? `transform ${duration}ms cubic-bezier(.22,.9,.28,1.12), filter 140ms ease`
+      : "none";
     activeDrag.ghost.style.transform = "translate3d(0,0,0) scale(1)";
     window.setTimeout(() => {
       activeDrag.ghost.remove();
       activeDrag.sourceBooks.forEach((element) => element.classList.remove("source-hidden"));
-    }, 295);
+    }, duration + 20);
   }
 }
 
@@ -421,7 +474,7 @@ loadLevel(currentLevelNumber);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js?v=8").catch(() => {
+    navigator.serviceWorker.register("./sw.js?v=9").catch(() => {
       // Le jeu reste entièrement utilisable en ligne si l'installation hors ligne échoue.
     });
   });
